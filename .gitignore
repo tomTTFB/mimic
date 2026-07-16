@@ -1,0 +1,4 @@
+# CraftOS-PC test artifacts
+*.log
+results.txt
+crash.txt
