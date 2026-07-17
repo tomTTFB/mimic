@@ -315,6 +315,10 @@ Priorities come from actually building screens, not from guessing.
 - **Maybe:** `StatList`, `AlarmStrip`, a `Chart` wrapper composing axes + labels around a Trend,
   `Slider`, `Dropdown`, `Toast` — build them when a real screen needs them, not before
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 mimic's own code is MIT. Vendored cc-mek-scada code is MIT, Copyright 2022–2026 Mikayla
