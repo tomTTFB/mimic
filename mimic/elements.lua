@@ -68,6 +68,18 @@ local PATHS = {
     Trend             = "mimic.Trend"
 }
 
+-- Elements that hold no value and so cannot be bound. Every element inherits a
+-- no-op set_value from the engine, so binding one of these would SILENTLY do
+-- nothing (the same trap the TextBox bug was). We cannot detect the no-op default
+-- by reference (it is a per-instance closure), so this is a maintained denylist of
+-- the pure containers / decorative elements. Anything not listed is bindable.
+local NON_BINDABLE = {
+    Div = true, Rectangle = true, DisplayBox = true, MultiPane = true,
+    AppMultiPane = true, ListBox = true, ColorMap = true, Tiling = true,
+    PipeNetwork = true, Sidebar = true, TabBar = true, App = true,
+    Waiting = true
+}
+
 -- which psil each element draws from; weak keys so this never pins elements alive
 local ps_of = setmetatable({}, { __mode = "k" })
 
@@ -117,6 +129,11 @@ local function wrap(ctor, name)
         if src ~= nil then ps_of[elem] = src end
 
         if bind ~= nil then
+            if NON_BINDABLE[name] then
+                error("mimic: " .. name .. " holds no value and cannot be bound. " ..
+                      "bind= belongs on a display element (LED, TextBox, DataIndicator, a bar, ...); " ..
+                      "a " .. name .. " is a container.", 0)
+            end
             if src == nil then
                 error("mimic: " .. name .. "{bind=\"" .. tostring(bind) .. "\"} has no data source. " ..
                       "Pass ps= on this element or any ancestor, or via mimic.init{ps=...}.", 0)

@@ -62,7 +62,7 @@ return function (args)
 
     local min = args.min or 0
     local max = args.max or 1.0
-    element.assert(min ~= max, "min and max must differ")
+    element.assert(max > min, "max must be greater than min")
 
     local e = element.new(args --[[@as graphics_args]])
 
@@ -148,7 +148,12 @@ return function (args)
     -- push a sample; the chart shifts left
     ---@param v number
     function e.on_update(v)
+        -- a wrong TYPE is a programming bug -> fail loudly
         element.assert(type(v) == "number", "Trend expects a number, got " .. type(v))
+        -- a non-finite VALUE (NaN/inf) is bad data, not a bug: a glitchy sensor
+        -- reading must not crash a live dashboard. Skip it and keep the chart as-is,
+        -- rather than shifting a poison value into the buffer.
+        if v ~= v or v == math.huge or v == -math.huge then return end
 
         table.remove(samples, 1)
         samples[#samples + 1] = v

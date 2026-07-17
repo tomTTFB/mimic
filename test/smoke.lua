@@ -613,6 +613,59 @@ check("Dialog needs at least one button", function ()
     assert(tostring(err):find("at least one button"), "unhelpful: " .. tostring(err))
 end)
 
+-- hardening: silent-failure and edge cases found by probing
+
+check("bind on a container errors, does not silently no-op", function ()
+    local mm = require("mimic.elements")
+    local ok, err = pcall(function ()
+        mm.Div{parent=sandbox,ps=sbox_ps,x=2,y=44,width=10,height=2,bind="nope"}
+    end)
+    assert(not ok, "binding a Div should error")
+    assert(tostring(err):find("cannot be bound"), "unhelpful: " .. tostring(err))
+end)
+
+check("Table max_rows errors clearly instead of a cryptic crash", function ()
+    local Table = require("mimic.Table")
+    local t = Table{parent=sandbox,x=130,y=25,width=20,height=6,max_rows=10,
+                    columns={ { name="N", width=6 } }}
+    local ok, err = pcall(function () for i = 1, 15 do t.add_row{ tostring(i) } end end)
+    assert(not ok, "should error past max_rows")
+    assert(t.row_count() == 10, "should stop at max_rows, got " .. t.row_count())
+    assert(tostring(err):find("full at"), "unhelpful: " .. tostring(err))
+end)
+
+check("Trend rejects min >= max", function ()
+    local Trend = require("mimic.Trend")
+    local ok = pcall(function () Trend{parent=sandbox,x=150,y=25,width=6,height=4,min=100,max=0} end)
+    assert(not ok, "min > max should error")
+    local ok2 = pcall(function () Trend{parent=sandbox,x=150,y=30,width=6,height=4,min=5,max=5} end)
+    assert(not ok2, "min == max should error")
+end)
+
+check("Trend skips NaN/inf without crashing (live-data resilience)", function ()
+    local mm = require("mimic.elements")
+    local t = Trend and nil
+    local Tr = require("mimic.Trend")
+    local tr = Tr{parent=sandbox,x=150,y=35,width=4,height=4,max=100}
+    tr.set_all(50)
+    -- a wrong type is a bug -> still errors
+    assert(not pcall(function () tr.push("x") end), "non-number should error")
+    -- bad data must NOT crash, and must not corrupt the buffer
+    tr.push(0/0); tr.push(1/0); tr.push(-1/0)
+    local s = tr.get_samples()
+    assert(s[#s] == 50, "NaN/inf should be skipped, buffer unchanged; got " .. tostring(s[#s]))
+    tr.push(75)
+    assert(tr.get_samples()[4] == 75, "a good value after bad ones must still land")
+end)
+
+check("LEDList rejects an empty list clearly", function ()
+    local ok, err = pcall(function ()
+        require("mimic.LEDList"){parent=sandbox,x=2,y=44,width=12,leds={}}
+    end)
+    assert(not ok, "empty LEDList should error")
+    assert(tostring(err):find("empty"), "unhelpful: " .. tostring(err))
+end)
+
 check("monitor_resize is never fatal", function ()
     local win = window.create(term.current(), 1, 1, 40, 12, false)
     local d = mimic.add_display{window=win, ps=sbox_ps}

@@ -37,6 +37,7 @@ local style_m  = require("mimic.style")
 ---@field gap? integer blank columns between columns, defaults to 1
 ---@field header_fg_bg? cpair header colors, defaults to the theme header
 ---@field row_fg_bg? cpair row colors, inherited from the parent otherwise
+---@field max_rows? integer hard row ceiling, defaults to 500
 ---@field x? integer
 ---@field y? integer
 ---@field width? integer defaults to the parent's width
@@ -82,12 +83,16 @@ return function (args)
                 alignment=c.align or core.ALIGN.LEFT}
     end
 
-    -- scrolling body: give it generous internal height so rows are never clipped;
-    -- ListBox scrolls whatever exceeds the visible area
+    -- scrolling body. ListBox has a fixed internal scroll height set at creation, so
+    -- there is a hard row ceiling: adding past it used to crash with a cryptic
+    -- "frame height not >= 1". max_rows sets that ceiling (each row is one line) and
+    -- add_row reports clearly when it is reached.
     local body_h = args.height - 1
     if body_h < 1 then error("mimic: Table{height=} needs at least 2 (header + a row)", 0) end
 
-    local body = ListBox{parent=host,x=1,y=2,width=total_w,height=body_h,scroll_height=200,
+    local max_rows = args.max_rows or 500
+
+    local body = ListBox{parent=host,x=1,y=2,width=total_w,height=body_h,scroll_height=max_rows,
                          fg_bg=args.row_fg_bg,nav_fg_bg=style_m.lg_gray}
 
     ---@class mimic_table
@@ -98,6 +103,10 @@ return function (args)
     ---@param values string[]
     ---@return integer row index
     function tbl.add_row(values)
+        if #rows >= max_rows then
+            error("mimic: Table is full at " .. max_rows .. " rows. " ..
+                  "Pass max_rows= to raise the ceiling, or clear() old rows.", 0)
+        end
         values = values or {}
         local line = Div{parent=body,width=total_w,height=1}
         local cells = {}

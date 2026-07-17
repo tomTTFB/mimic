@@ -46,6 +46,9 @@ return function (args)
     if type(args.leds) ~= "table" then
         error("mimic: LEDList{leds=} is required and must be a table", 0)
     end
+    if #args.leds == 0 then
+        error("mimic: LEDList{leds={}} is empty; give it at least one row", 0)
+    end
 
     local default_kind = args.kind or "LED"
     local default_color = args.color or style.ind_grn

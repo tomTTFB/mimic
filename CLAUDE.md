@@ -85,6 +85,13 @@ Anything peripheral- or timing-related must be checked in-game too.
   default no-op; a `TextBox` defines only `set_value`, so binding through `update()` used to
   silently do nothing (a label that never changes, no error). If you add a value-bearing
   element, define `set_value`.
+- **Bad *data* must not crash a live UI; a *bug* should.** A wrong type passed to an
+  element (e.g. a string to Trend) is a programming error and fails loudly. A non-finite
+  value (NaN/inf) from a glitchy feed is skipped, not thrown — one bad sensor reading must
+  not take down `mimic.run`. Guard new value-taking elements the same way.
+- **Binding a container is caught.** Every element inherits a no-op `set_value`, so binding
+  a Div/Rectangle/etc would silently do nothing. `mimic/elements.lua` keeps a `NON_BINDABLE`
+  denylist and errors at build. Add to it if you vendor a new pure container.
 - **`monitor_resize` is routine in Minecraft** (chunk load, attach) and usually not a
   real size change. Never treat it as fatal. mimic checks the size and ignores no-ops.
 
