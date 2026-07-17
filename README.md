@@ -66,6 +66,7 @@ front_panel2       -- the same panel using bind= and LEDList
 panel_tabs         -- a tabbed front panel; fits a bare 51x19 computer screen
 dashboard          -- full dashboard: panels, gauges, trends, bar chart, alarms
 facility           -- front panel on the computer + dashboard on a monitor, one program
+themes             -- switch built-in + custom themes, and persist the choice
 ```
 
 `dashboard` and `facility` need a monitor at least 100 wide (an 8×4 advanced monitor at 0.5
@@ -84,8 +85,9 @@ and clears the screen, so the result already looks right with no styling of your
 | option | default | meaning |
 |---|---|---|
 | `monitor` | *(terminal)* | monitor peripheral name, e.g. `"monitor_0"` |
-| `theme` | `mimic.THEME.DEEPSLATE` | `DEEPSLATE` (dark) or `SMOOTH_STONE` (light) |
+| `theme` | `"deepslate"` | theme name, a custom theme table, or a `mimic.THEME.*` enum — see [Theming](#theming) |
 | `color_mode` | `mimic.COLOR_MODE.STANDARD` | assistive color modes — see below |
+| `prefs` | `false` | load the saved theme/color_mode if present (an explicit `theme=` still wins) |
 | `scale` | `0.5` | monitor text scale (ignored for the terminal) |
 | `ps` | *(none)* | default psil data source, inherited by every element below |
 | `on_resize` | *(none)* | `on_resize(root, w, h)` when this display's size really changes |
@@ -210,6 +212,41 @@ while setting the other.
   real size change. mimic checks the size and ignores the no-ops, so it is never fatal.
   Pass `on_resize` if your UI needs to rebuild for a genuinely new size.
 
+### Theming
+
+mimic ships two themes — `deepslate` (dark, the default) and `smooth_stone` (light) — and you
+can register your own. Pick one at init by name:
+
+```lua
+mimic.init{theme = "smooth_stone"}
+```
+
+A **custom theme** is a partial table: name only what you change, and everything else —
+including the color palette — is inherited from a base (deepslate, or smooth_stone if you set
+`dark = false`).
+
+```lua
+mimic.register_theme("midnight", {
+    dark = true,
+    text = colors.cyan,
+    colors = {                          -- palette hexes; omit to keep the base palette
+        { c = colors.cyan,  hex = 0x00e5ff },
+        { c = colors.green, hex = 0x39ff14 },
+    },
+})
+
+mimic.init{theme = "midnight"}
+```
+
+**Persistence:** `mimic.save_prefs(name, color_mode)` writes the choice, and
+`mimic.init{prefs = true}` loads it (an explicit `theme=` still wins). So a user can pick a
+theme once and have it stick across restarts.
+
+**Theme is chosen at init, not switched live.** An element bakes its colors when it is built,
+so changing theme means rebuilding the screen — re-run the program (see `examples/themes.lua`).
+This is the same model cc-mek-scada uses. A *configurator* (an interactive settings screen) is
+something you build with mimic, not a built-in — see the note in the roadmap.
+
 ### Accessibility
 
 `color_mode` remaps the palette for colorblind users, and is inherited from the upstream
@@ -271,6 +308,10 @@ Priorities come from actually building screens, not from guessing.
 - **Done:** `bind=` / `ps=` inheritance, the `mimic.elements` front door, `LEDList`, `Panel`,
   `Tabs`, `Gauge`, `Trend` (area + line), `BarChart`, `Row`, `Grid`, `Table`, `Dialog`,
   multi-display support
+- **A configurator** (interactive settings screen) is intentionally *not* a core feature —
+  it is app-specific and built with mimic's own elements (TextField, RadioButton, Tabs,
+  buttons) plus `save_prefs`/`load_prefs`. cc-mek-scada's `configure.lua` is exactly this:
+  a consumer of the toolkit, not part of it.
 - **Maybe:** `StatList`, `AlarmStrip`, a `Chart` wrapper composing axes + labels around a Trend,
   `Slider`, `Dropdown`, `Toast` — build them when a real screen needs them, not before
 

@@ -666,6 +666,65 @@ check("LEDList rejects an empty list clearly", function ()
     assert(tostring(err):find("empty"), "unhelpful: " .. tostring(err))
 end)
 
+-- configurable themes
+
+check("theme selectable by name", function ()
+    local w = window.create(term.current(), 1, 1, 20, 6, false)
+    mimic.init{window=w, theme="smooth_stone"}
+    assert(mimic.style.theme.bg == colors.lightGray, "smooth_stone should have a light bg")
+    -- restore the default so later checks build against deepslate
+    mimic.style.set_theme(mimic.THEME.DEEPSLATE, mimic.COLOR_MODE.STANDARD)
+end)
+
+check("register_theme + custom palette", function ()
+    mimic.register_theme("t_custom", { dark=true, text=colors.cyan,
+        colors={ { c=colors.cyan, hex=0x00e5ff } } })
+    assert(mimic.themes["t_custom"] ~= nil, "custom theme not registered")
+    local w = window.create(term.current(), 1, 1, 20, 6, false)
+    mimic.init{window=w, theme="t_custom"}
+    local r, g, b = w.getPaletteColor(colors.cyan)
+    local hex = math.floor(r*255+0.5)*65536 + math.floor(g*255+0.5)*256 + math.floor(b*255+0.5)
+    assert(hex == 0x00e5ff, string.format("custom palette not applied: cyan=0x%06x", hex))
+    mimic.style.set_theme(mimic.THEME.DEEPSLATE, mimic.COLOR_MODE.STANDARD)
+end)
+
+check("partial theme inherits from base", function ()
+    local t = mimic.make_theme{ accent_light = colors.orange }
+    assert(t.accent_light == colors.orange, "override lost")
+    assert(t.bg == colors.black, "should inherit deepslate bg")
+    assert(type(t.colors) == "table", "should inherit the palette")
+end)
+
+check("make_theme rejects a bad palette", function ()
+    local ok, err = pcall(function () mimic.make_theme{ colors = "nope" } end)
+    assert(not ok, "bad colors should error")
+    assert(tostring(err):find("list of"), "unhelpful: " .. tostring(err))
+end)
+
+check("unknown theme name errors and lists known", function ()
+    local ok, err = pcall(function ()
+        mimic.init{window=window.create(term.current(),1,1,10,4,false), theme="banana"}
+    end)
+    assert(not ok, "unknown theme should error")
+    assert(tostring(err):find("no theme named") and tostring(err):find("deepslate"),
+           "should name the problem and list known: " .. tostring(err))
+end)
+
+check("theme prefs save and load round-trip", function ()
+    mimic.prefs_path = "/.mimic-prefs-test"
+    mimic.save_prefs("smooth_stone", mimic.COLOR_MODE.DEUTERANOPIA)
+    local p = mimic.load_prefs()
+    assert(p ~= nil and p.theme == "smooth_stone", "theme not persisted")
+    assert(p.color_mode == mimic.COLOR_MODE.DEUTERANOPIA, "color_mode not persisted")
+    -- init{prefs=true} should pick it up
+    mimic.init{window=window.create(term.current(),1,1,20,6,false), prefs=true}
+    assert(mimic.style.theme.bg == colors.lightGray, "prefs theme (smooth_stone) not applied")
+    assert(mimic.style.colorblind == true, "prefs color_mode not applied")
+    fs.delete(mimic.prefs_path)
+    mimic.prefs_path = "/.mimic-prefs"
+    mimic.style.set_theme(mimic.THEME.DEEPSLATE, mimic.COLOR_MODE.STANDARD)
+end)
+
 check("monitor_resize is never fatal", function ()
     local win = window.create(term.current(), 1, 1, 40, 12, false)
     local d = mimic.add_display{window=win, ps=sbox_ps}

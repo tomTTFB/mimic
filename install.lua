@@ -94,6 +94,7 @@ local FILES = {
     "examples/panel_tabs.lua",
     "examples/dashboard.lua",
     "examples/facility.lua",
+    "examples/themes.lua",
 }
 
 local function fail(msg)

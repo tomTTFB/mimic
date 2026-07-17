@@ -45,6 +45,40 @@ mimic.THEME      = themes.UI_THEME
 mimic.COLOR_MODE = themes.COLOR_MODE
 mimic.PERIOD     = flasher.PERIOD
 
+-- theme configuration
+mimic.register_theme = style.register_theme   -- register_theme(name, def)
+mimic.make_theme     = style.make_theme       -- make_theme(def) -> full theme table
+mimic.themes         = style.themes           -- the name -> theme registry
+
+-- where theme preferences are persisted; change before init if you want another path
+mimic.prefs_path = "/.mimic-prefs"
+
+-- Save the chosen theme + color mode so it survives a restart.
+---@param theme string theme name
+---@param color_mode? COLOR_MODE assistive color mode, defaults to standard
+function mimic.save_prefs(theme, color_mode)
+    if type(theme) ~= "string" then
+        error("mimic: save_prefs expects a theme NAME (string) so it can be reloaded", 0)
+    end
+    local f = fs.open(mimic.prefs_path, "w")
+    if f == nil then error("mimic: cannot write prefs to " .. mimic.prefs_path, 0) end
+    f.write(textutils.serialize({ theme = theme, color_mode = color_mode or mimic.COLOR_MODE.STANDARD }))
+    f.close()
+end
+
+-- Load saved theme prefs, if any.
+---@return { theme: string, color_mode: integer }|nil
+function mimic.load_prefs()
+    if not fs.exists(mimic.prefs_path) then return nil end
+    local f = fs.open(mimic.prefs_path, "r")
+    if f == nil then return nil end
+    local data = f.readAll()
+    f.close()
+    local ok, prefs = pcall(textutils.unserialize, data)
+    if not ok or type(prefs) ~= "table" or type(prefs.theme) ~= "string" then return nil end
+    return prefs
+end
+
 -- active session state
 --
 -- A real setup has more than one screen: a front panel on the computer's own
@@ -102,8 +136,11 @@ end
 
 ---@class mimic_init_opts
 ---@field monitor? string monitor peripheral name; the computer terminal if omitted
----@field theme? UI_THEME mimic.THEME.DEEPSLATE (default) or mimic.THEME.SMOOTH_STONE
+---@field theme? any theme name ("deepslate"/"smooth_stone"/registered), a theme table,
+---       or a mimic.THEME.* enum. Defaults to deepslate.
 ---@field color_mode? COLOR_MODE assistive color mode, defaults to standard
+---@field prefs? boolean load the saved theme/color_mode (see mimic.load_prefs) if present;
+---       an explicit theme=/color_mode= still overrides
 ---@field scale? number monitor text scale, defaults to 0.5 (ignored for the terminal)
 ---@field ps? psil default data source, inherited by every element built under the root
 ---@field window? table render into this window instead of the terminal or a monitor
@@ -125,8 +162,11 @@ end
 function mimic.init(opts)
     opts = opts or {}
 
-    local theme_id = opts.theme or mimic.THEME.DEEPSLATE
-    local color_mode = opts.color_mode or mimic.COLOR_MODE.STANDARD
+    -- saved prefs fill in whatever the caller did not pass explicitly
+    local saved = opts.prefs and mimic.load_prefs() or nil
+
+    local theme_id = opts.theme or (saved and saved.theme) or mimic.THEME.DEEPSLATE
+    local color_mode = opts.color_mode or (saved and saved.color_mode) or mimic.COLOR_MODE.STANDARD
 
     -- resolve the draw target
     local target
