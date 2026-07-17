@@ -85,6 +85,7 @@ and clears the screen, so the result already looks right with no styling of your
 | `color_mode` | `mimic.COLOR_MODE.STANDARD` | assistive color modes — see below |
 | `scale` | `0.5` | monitor text scale (ignored for the terminal) |
 | `ps` | *(none)* | default psil data source, inherited by every element below |
+| `on_resize` | *(none)* | `on_resize(root, w, h)` when this display's size really changes |
 
 ### `mimic.run(on_event?)`
 
@@ -170,6 +171,9 @@ while setting the other.
   errors without it. For a plain filled box, pass neither.
 - Elements auto-stack vertically inside a `Div` when you omit `y`; `line_break()` adds a gap.
   Run off the bottom and you get `frame height not >= 1`, which means "out of vertical space".
+- Minecraft fires `monitor_resize` routinely — on chunk load, on attach — usually with no
+  real size change. mimic checks the size and ignores the no-ops, so it is never fatal.
+  Pass `on_resize` if your UI needs to rebuild for a genuinely new size.
 
 ### Accessibility
 

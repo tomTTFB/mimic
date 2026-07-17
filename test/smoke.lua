@@ -467,6 +467,28 @@ check("add_display without a monitor errors", function ()
     assert(tostring(err):find("requires a monitor"), "unhelpful: " .. tostring(err))
 end)
 
+-- regression: Minecraft fires monitor_resize on chunk load / attach, usually with no
+-- actual size change. mimic used to treat it as fatal, which killed the program a second
+-- after world load. CraftOS-PC's emulated monitor never fires it, so no test caught it.
+check("monitor_resize is never fatal", function ()
+    local win = window.create(term.current(), 1, 1, 40, 12, false)
+    local d = mimic.add_display{window=win, ps=sbox_ps}
+    assert(d ~= nil)
+
+    -- run() blocks, so drive the same path the loop does: queue the event and pump once
+    local pumped = false
+    parallel.waitForAny(
+        function ()
+            os.queueEvent("monitor_resize", "right")
+            os.queueEvent("terminate")
+            mimic.run()
+            pumped = true
+        end,
+        function () os.sleep(2) end
+    )
+    assert(pumped, "run() died on monitor_resize instead of ignoring it")
+end)
+
 check("mimic.stop() restores palette", function ()
     mimic.stop()
     local r, g, b = term.getPaletteColor(colors.red)

@@ -103,6 +103,9 @@ end
 ---@field scale? number monitor text scale, defaults to 0.5 (ignored for the terminal)
 ---@field ps? psil default data source, inherited by every element built under the root
 ---@field window? table render into this window instead of the terminal or a monitor
+---@field on_resize? function called as on_resize(root, w, h) when this display's size
+---       actually changes. Minecraft fires monitor_resize routinely without a real size
+---       change, so mimic ignores those; only genuine changes reach you here.
 
 -- Set up a display and return the root element to build on.
 --
@@ -151,11 +154,17 @@ function mimic.init(opts)
     -- make the data source inheritable by everything built under this root
     if opts.ps ~= nil then elements.set_ps(root, opts.ps) end
 
+    local dw, dh = target.getSize()
+
     self.displays[#self.displays + 1] = {
         root = root,
         target = target,
         palette = style.theme,
-        monitor = opts.monitor
+        monitor = opts.monitor,
+        -- remembered so a monitor_resize can be checked rather than assumed
+        width = dw,
+        height = dh,
+        on_resize = opts.on_resize
     }
 
     -- the first display is the default one for single-screen programs
@@ -235,10 +244,18 @@ function mimic.run(on_event)
             local d = terminal_display()
             if d then d.root.handle_paste(p1) end
         elseif event == "monitor_resize" then
-            -- surface it rather than redrawing at the wrong size in silence
-            if on_event == nil then
-                error(util.c("mimic: monitor '", p1, "' was resized. Rebuild the UI for the ",
-                             "new size, or pass an on_event hook to handle it."), 0)
+            -- Minecraft fires this routinely: on chunk load, on attach, on redstone
+            -- updates near the monitor. Usually the size has not actually changed, so
+            -- never treat it as fatal - crashing here kills the program on world load.
+            local d = display_for_monitor(p1)
+            if d then
+                local w, h = d.target.getSize()
+                if w ~= d.width or h ~= d.height then
+                    d.width, d.height = w, h
+                    -- the element tree was built for the old size and cannot stretch
+                    -- itself; hand it to the caller if they said how to rebuild
+                    if d.on_resize then d.on_resize(d.root, w, h) end
+                end
             end
         elseif event == "terminate" then
             self.running = false
