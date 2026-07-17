@@ -175,6 +175,39 @@ check("bind= updates element from psil", function ()
     assert(d.get_value() == 77, "bind= did not propagate, got " .. tostring(d.get_value()))
 end)
 
+-- regression: binding a TextBox used to silently no-op, because bind called
+-- update() and TextBox defines only set_value (its on_update is the engine default
+-- no-op). A label that never changes with no error is the worst failure mode.
+check("bind= drives a TextBox (set_value, not update)", function ()
+    local DisplayBox = require("graphics.elements.DisplayBox")
+    local mm = require("mimic.elements")
+    local psil = require("scada-common.psil")
+    local ps = psil.create()
+    -- own window, so crowded sandbox rows can't cause a spurious fit error
+    local w = DisplayBox{window=window.create(term.current(),1,1,30,6,false),fg_bg=style.root}
+    mm.set_ps(w, ps)
+    local tb = mm.TextBox{parent=w,x=1,y=1,width=24,text="start",bind="tk",
+                          transform=function (v) return "got:" .. tostring(v) end}
+    ps.publish("tk", "HELLO")
+    assert(tb.get_value() == "got:HELLO",
+           "TextBox bind did not fire; value is '" .. tostring(tb.get_value()) .. "'")
+end)
+
+check("bind= still drives indicators (set_value == on_update)", function ()
+    local DisplayBox = require("graphics.elements.DisplayBox")
+    local mm = require("mimic.elements")
+    local psil = require("scada-common.psil")
+    local ps = psil.create()
+    local w = DisplayBox{window=window.create(term.current(),1,1,30,6,false),fg_bg=style.root}
+    mm.set_ps(w, ps)
+    local led = mm.LED{parent=w,x=1,y=1,label="Z",colors=style.ind_grn,bind="zk"}
+    ps.publish("zk", true)
+    assert(led.get_value() == true, "LED bind broke after the set_value switch")
+    local bar = mm.HorizontalBar{parent=w,x=1,y=3,width=10,height=1,bind="bk"}
+    ps.publish("bk", 0.5)
+    assert(math.abs(bar.get_value() - 0.5) < 0.001, "HorizontalBar bind broke")
+end)
+
 check("bind= transform applied", function ()
     local m = require("mimic.elements")
     local psil = require("scada-common.psil")

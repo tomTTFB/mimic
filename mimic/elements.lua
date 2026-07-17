@@ -122,8 +122,17 @@ local function wrap(ctor, name)
                       "Pass ps= on this element or any ancestor, or via mimic.init{ps=...}.", 0)
             end
 
-            if type(elem.update) ~= "function" then
-                error("mimic: " .. name .. " cannot be bound (it has no update function)", 0)
+            -- Drive the element through set_value, not update.
+            --
+            -- The engine gives both a default no-op, and elements override whichever
+            -- they use: indicators define set_value = on_update (both work), but a
+            -- TextBox defines ONLY set_value. Binding through update() therefore
+            -- SILENTLY did nothing on a TextBox - the worst failure mode, no error,
+            -- just a label that never changes. Every value-bearing element defines
+            -- set_value, so it is the safe canonical setter.
+            local setter = elem.set_value
+            if type(setter) ~= "function" then
+                error("mimic: " .. name .. " cannot be bound (no set_value)", 0)
             end
 
             local fn
@@ -131,9 +140,9 @@ local function wrap(ctor, name)
                 if type(transform) ~= "function" then
                     error("mimic: " .. name .. "{transform=} must be a function", 0)
                 end
-                fn = function (v) elem.update(transform(v)) end
+                fn = function (v) setter(transform(v)) end
             else
-                fn = elem.update
+                fn = setter
             end
 
             -- register() rather than ps.subscribe(), so the element unsubscribes when deleted

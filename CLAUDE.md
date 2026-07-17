@@ -81,6 +81,10 @@ Anything peripheral- or timing-related must be checked in-game too.
 - **Children inherit `fg_bg` from their parent.** Do not repeat it on every child.
 - **Overflowing children are silently clipped** (`math.min`), not errored, unless the
   child *starts* past the parent edge. Budget vertical space carefully.
+- **Binding drives elements through `set_value`, not `update`.** The engine gives both a
+  default no-op; a `TextBox` defines only `set_value`, so binding through `update()` used to
+  silently do nothing (a label that never changes, no error). If you add a value-bearing
+  element, define `set_value`.
 - **`monitor_resize` is routine in Minecraft** (chunk load, attach) and usually not a
   real size change. Never treat it as fatal. mimic checks the size and ignores no-ops.
 
