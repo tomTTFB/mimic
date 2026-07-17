@@ -17,7 +17,7 @@
 --   action = "allow"
 --
 
-local DEFAULT_BASE = "https://raw.githubusercontent.com/YOUR-USER/mimic/main"
+local DEFAULT_BASE = "https://raw.githubusercontent.com/TomTTFB/mimic/main"
 
 local base = ... or DEFAULT_BASE
 base = base:gsub("/$", "")
