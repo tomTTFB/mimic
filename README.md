@@ -7,7 +7,7 @@ Built on the graphics engine from [cc-mek-scada](https://github.com/MikaylaFisch
 by Mikayla Fischler, used under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 > **Status: pre-alpha (v0.1.0).** The vendored engine is battle-tested. The `mimic/` layer on
-> top is new, but it runs: `test/run.sh` executes a 52-check smoke test inside CraftOS-PC and
+> top is new, but it runs: `test/run.sh` runs a smoke test inside CraftOS-PC and
 > passes, and every example runs on real in-game hardware. The API may still change.
 
 ## Why not [Basalt](https://basalt.madefor.cc/)?
@@ -63,10 +63,13 @@ No locals, no wiring, nothing to keep in sync.
 hello              -- panel, button, blinking alarm, live readout
 front_panel        -- a device front panel, written with bare elements
 front_panel2       -- the same panel using bind= and LEDList
-dashboard          -- full 164x46 dashboard: panels, gauges, trends, bar chart, alarms
+panel_tabs         -- a tabbed front panel; fits a bare 51x19 computer screen
+dashboard          -- full dashboard: panels, gauges, trends, bar chart, alarms
+facility           -- front panel on the computer + dashboard on a monitor, one program
 ```
 
-`dashboard` needs a display at least 100 wide — a monitor, or a terminal sized up to match.
+`dashboard` and `facility` need a monitor at least 100 wide (an 8×4 advanced monitor at 0.5
+text scale). `panel_tabs`, `front_panel`, and `hello` fit a bare computer screen.
 
 `front_panel.lua` and `front_panel2.lua` are the same screen written both ways, kept side by
 side on purpose: **168 lines and 18 `register()` calls become 97 lines and zero.**

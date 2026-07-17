@@ -52,7 +52,7 @@ just say `bind=`. `ps.publish("key", v)` updates every bound element. This repla
 ./test/run.sh
 ```
 
-It runs `test/smoke.lua` (52 checks) inside **CraftOS-PC headless** against the real
+It runs `test/smoke.lua` inside **CraftOS-PC headless** against the real
 library — no mocks. Needs CraftOS-PC installed (https://www.craftos-pc.cc/). It exits
 non-zero on failure. Add a check for anything you build.
 
