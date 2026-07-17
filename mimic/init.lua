@@ -30,6 +30,10 @@ mimic.Panel      = require("mimic.Panel")
 mimic.Tabs       = require("mimic.Tabs")
 mimic.Gauge      = require("mimic.Gauge")
 mimic.BarChart   = require("mimic.BarChart")
+mimic.Row        = require("mimic.Row")
+mimic.Grid       = require("mimic.Grid")
+mimic.Table      = require("mimic.Table")
+mimic.Dialog     = require("mimic.Dialog")
 -- via the elements table, so it picks up bind=/ps= handling like the vendored elements
 mimic.Trend      = elements.Trend
 mimic.cpair      = core.cpair

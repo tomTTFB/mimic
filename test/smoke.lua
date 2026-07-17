@@ -470,6 +470,116 @@ end)
 -- regression: Minecraft fires monitor_resize on chunk load / attach, usually with no
 -- actual size change. mimic used to treat it as fatal, which killed the program a second
 -- after world load. CraftOS-PC's emulated monitor never fires it, so no test caught it.
+-- layout helpers: Row, Grid
+
+check("Row equal columns fill the width exactly", function ()
+    local Row = require("mimic.Row")
+    local cells, container = Row{parent=sandbox,x=2,y=30,width=40,height=5,count=4,gap=1}
+    assert(#cells == 4, "expected 4 cells, got " .. #cells)
+    -- 40 wide, 3 gaps -> 37 shared over 4 = 10,9,9,9
+    local sum = 0
+    for i = 1, 4 do sum = sum + cells[i].get_width() end
+    assert(sum == 37, "cell widths + gaps should fill 40; cells sum " .. sum)
+    assert(container.get_width() == 40, "container width " .. container.get_width())
+end)
+
+check("Row explicit widths with a flexible cell", function ()
+    local Row = require("mimic.Row")
+    -- 50 wide, gaps 2, fixed 10+10=20, one flex cell gets the rest
+    local cells = Row{parent=sandbox,x=2,y=36,width=50,height=4,widths={10,0,10},gap=2}
+    assert(cells[1].get_width() == 10, "fixed cell 1")
+    assert(cells[3].get_width() == 10, "fixed cell 3")
+    -- leftover = 50 - 20 - 2*2 = 26 for the single flex cell
+    assert(cells[2].get_width() == 26, "flex cell should be 26, got " .. cells[2].get_width())
+end)
+
+check("Row rejects count= and widths= together", function ()
+    local Row = require("mimic.Row")
+    local ok = pcall(function ()
+        Row{parent=sandbox,y=1,height=3,count=2,widths={5,5}}
+    end)
+    assert(not ok, "expected an error for both count= and widths=")
+end)
+
+check("Grid lays out cells row-major and by (col,row)", function ()
+    local Grid = require("mimic.Grid")
+    local cells = Grid{parent=sandbox,x=60,y=30,width=60,height=12,cols=3,rows=2,gap_x=1,gap_y=1}
+    assert(#cells == 6, "expected 6 cells, got " .. #cells)
+    -- row-major: cells[4] is (col 1, row 2)
+    assert(cells(1, 2) == cells[4], "cells(1,2) should equal cells[4]")
+    assert(cells(3, 1) == cells[3], "cells(3,1) should equal cells[3]")
+    -- second row starts lower than the first
+    assert(cells(1, 2) ~= nil, "missing cell (1,2)")
+end)
+
+check("Grid too small errors clearly", function ()
+    local Grid = require("mimic.Grid")
+    local ok, err = pcall(function ()
+        Grid{parent=sandbox,x=2,y=2,width=3,height=10,cols=8,rows=1}
+    end)
+    assert(not ok, "expected an error")
+    assert(tostring(err):find("does not fit"), "unhelpful: " .. tostring(err))
+end)
+
+-- Table
+
+check("Table builds rows and updates cells", function ()
+    local Table = require("mimic.Table")
+    local ALIGN = require("graphics.core").ALIGN
+    local t = Table{parent=sandbox,x=125,y=30,width=36,height=10,columns={
+        { name="NODE",  width=10 },
+        { name="STATE", width=10 },
+        { name="CPU",   width=6, align=ALIGN.RIGHT },
+    }}
+    local r1 = t.add_row{ "NODE 01", "ONLINE", "81%" }
+    local r2 = t.add_row{ "NODE 02", "STANDBY", "2%" }
+    assert(t.row_count() == 2, "expected 2 rows, got " .. t.row_count())
+    assert(r1 == 1 and r2 == 2, "row indices should be 1 and 2")
+
+    t.set_cell(r1, 3, "84%")   -- must not error
+    t.set_row(r2, { "NODE 02", "ONLINE", "40%" })
+
+    t.clear()
+    assert(t.row_count() == 0, "clear() should empty the table")
+end)
+
+check("Table rejects a bad cell reference", function ()
+    local Table = require("mimic.Table")
+    local t = Table{parent=sandbox,x=125,y=42,width=30,height=4,columns={ { name="A", width=8 } }}
+    t.add_row{ "x" }
+    local ok, err = pcall(function () t.set_cell(1, 5, "y") end)
+    assert(not ok, "expected an error for a missing column")
+    assert(tostring(err):find("no column"), "unhelpful: " .. tostring(err))
+end)
+
+-- Dialog
+
+check("Dialog starts hidden and toggles", function ()
+    local Dialog = require("mimic.Dialog")
+    local fired = false
+    local d = Dialog{parent=sandbox,title="CONFIRM",message="Stop the chamber?",
+                     accent=colors.red,buttons={
+        { text="STOP", color=style.ind_red, callback=function () fired = true end },
+        { text="CANCEL" },
+    }}
+    assert(not d.is_open(), "dialog should start hidden")
+    d.show()
+    assert(d.is_open(), "dialog should be open after show()")
+    d.hide()
+    assert(not d.is_open(), "dialog should be closed after hide()")
+    -- the fired flag is exercised by the button path; here we just confirm it defaults false
+    assert(fired == false, "callback should not fire on its own")
+end)
+
+check("Dialog needs at least one button", function ()
+    local Dialog = require("mimic.Dialog")
+    local ok, err = pcall(function ()
+        Dialog{parent=sandbox,message="x",buttons={}}
+    end)
+    assert(not ok, "expected an error")
+    assert(tostring(err):find("at least one button"), "unhelpful: " .. tostring(err))
+end)
+
 check("monitor_resize is never fatal", function ()
     local win = window.create(term.current(), 1, 1, 40, 12, false)
     local d = mimic.add_display{window=win, ps=sbox_ps}

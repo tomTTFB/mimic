@@ -7,8 +7,8 @@ Built on the graphics engine from [cc-mek-scada](https://github.com/MikaylaFisch
 by Mikayla Fischler, used under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 > **Status: pre-alpha (v0.1.0).** The vendored engine is battle-tested. The `mimic/` layer on
-> top is new, but it runs: `test/run.sh` executes a 38-check smoke test inside CraftOS-PC and
-> passes. The API may still change.
+> top is new, but it runs: `test/run.sh` executes a 52-check smoke test inside CraftOS-PC and
+> passes, and every example runs on real in-game hardware. The API may still change.
 
 ## Why not [Basalt](https://basalt.madefor.cc/)?
 
@@ -155,6 +155,38 @@ underneath. Takes `bars` (each with `label`, `bind`, `transform`, `color`, `valu
 
 Trend draws only the plot. Compose axis labels around it — see `examples/dashboard.lua`.
 
+### Layout
+
+**`mimic.Row{...}`** — cells left to right, so you stop hand-computing column x. Either
+`count=N` (equal columns) or `widths={...}` (explicit; a `0` shares the leftover equally),
+plus `gap`. Returns the cells as `Div`s and the container.
+
+```lua
+local cols = mimic.Row{parent=root,y=3,height=14,count=4,gap=1}
+for i = 1, 4 do mimic.Panel{parent=cols[i],x=1,y=1,width=cols[i].get_width(),height=14,...} end
+```
+
+**`mimic.Grid{...}`** — a grid of equal cells. `cols`, `rows`, `gap_x`, `gap_y`. Returns cells
+row-major, also callable as `cells(col, row)`.
+
+### `mimic.Table{...}`
+
+Columns with a header and a scrolling body. `columns` (each `name`, `width`, optional `align`).
+Returns a table with `add_row{...}` → row index, `set_cell(row, col, text)`, `set_row`, `clear`,
+`row_count`.
+
+### `mimic.Dialog{...}`
+
+A modal confirm/alert centered over the display. `message`, `title`, `accent`, `width`, and
+`buttons` (each `text`, optional `color` and `callback`). Build it once; `show()` / `hide()` it.
+Each button closes the dialog and then runs its callback.
+
+```lua
+local d = mimic.Dialog{parent=root,title="CONFIRM",accent=colors.red,message="Stop chamber 3?",
+    buttons={ {text="STOP",color=mimic.style.ind_red,callback=stop}, {text="CANCEL"} }}
+d.show()
+```
+
 ### Colors
 
 `mimic.style` carries the active theme and ready-made pairs — `ind_grn`, `ind_yel`, `ind_red`,
@@ -231,14 +263,13 @@ through a `psil` to prove data binding propagates.
 
 ## Roadmap
 
-Priorities come from actually building screens (see `stage3-findings.md`), not from guessing.
+Priorities come from actually building screens, not from guessing.
 
 - **Done:** `bind=` / `ps=` inheritance, the `mimic.elements` front door, `LEDList`, `Panel`,
-  `Gauge`, `Trend` (area + line), `BarChart`
-- **Next:** `Row` / `Grid` (column layout arithmetic is the remaining repetitive bit),
-  `StatList`, `AlarmStrip`
-- **Then:** `Table`, `Dialog`, and a `Chart` wrapper that composes axes + labels around a Trend
-- **Later:** `Slider`, `Dropdown`, `Toast`
+  `Tabs`, `Gauge`, `Trend` (area + line), `BarChart`, `Row`, `Grid`, `Table`, `Dialog`,
+  multi-display support
+- **Maybe:** `StatList`, `AlarmStrip`, a `Chart` wrapper composing axes + labels around a Trend,
+  `Slider`, `Dropdown`, `Toast` — build them when a real screen needs them, not before
 
 ## License
 

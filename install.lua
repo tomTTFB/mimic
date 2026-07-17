@@ -83,6 +83,10 @@ local FILES = {
     "mimic/Trend.lua",
     "mimic/BarChart.lua",
     "mimic/Tabs.lua",
+    "mimic/Row.lua",
+    "mimic/Grid.lua",
+    "mimic/Table.lua",
+    "mimic/Dialog.lua",
 
     "examples/hello.lua",
     "examples/front_panel.lua",

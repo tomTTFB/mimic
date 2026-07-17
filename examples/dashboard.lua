@@ -62,13 +62,13 @@ m.TextBox{parent=root,x=W-24,y=1,width=23,text="",alignment=mimic.ALIGN.RIGHT,
 --
 
 local NODES = { "NODE 01", "NODE 02", "NODE 03", "NODE 04" }
-local NODE_W = 40
-
 local node_accents = { colors.cyan, colors.cyan, colors.cyan, colors.orange }
 
+-- Row splits the width into 4 equal columns; no more x=2+(i-1)*40 arithmetic
+local cols = mimic.Row{parent=root,x=2,y=NODE_Y,width=W-2,height=NODE_H,count=4,gap=1}
+
 for i, name in ipairs(NODES) do
-    local x = 2 + (i - 1) * NODE_W
-    local p = mimic.Panel{parent=root,x=x,y=NODE_Y,width=NODE_W - 1,height=NODE_H,
+    local p = mimic.Panel{parent=cols[i],x=1,y=1,width=cols[i].get_width(),height=NODE_H,
                           title=name,accent=node_accents[i]}
 
     -- state tag
