@@ -104,6 +104,13 @@ Anything peripheral- or timing-related must be checked in-game too.
   into**, not the raw element.
 - Keep the simple path simple: `elem.update(v)` must always work; `bind=` is opt-in.
 
+## Reference docs
+
+`docs/REFERENCE.md` is generated from the `---@field` annotations by
+`tools/gen_reference.py`. It is not hand-edited. After changing any element's or helper's
+args, regenerate it: `python tools/gen_reference.py`. The generator finds a constructor's
+args by the presence of a `parent` field, so keep that annotation on element arg classes.
+
 ## Publishing
 
 Public repo. In-game install is `wget run <raw-url>/install.lua`, which needs the repo

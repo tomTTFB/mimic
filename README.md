@@ -277,6 +277,9 @@ All of them are available from `require("mimic.elements")`, which resolves them 
 program only loads what it touches. The underlying `graphics.elements.*` paths still work if
 you want the unwrapped constructors.
 
+**Full argument reference for every element and helper: [docs/REFERENCE.md](docs/REFERENCE.md)** —
+generated from the source annotations, so it never drifts.
+
 ### A note on the `basalt` theme
 
 `graphics/themes.lua` includes a front-panel theme named `basalt`. That name comes from the
