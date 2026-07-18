@@ -576,6 +576,25 @@ check("Table builds rows and updates cells", function ()
     assert(t.row_count() == 0, "clear() should empty the table")
 end)
 
+-- regression: a live table that clear()s and refills every tick used to crash
+-- ("frame height not >= 1") once the engine's ever-growing auto-y counter passed
+-- the scroll frame. Rows now take an explicit bounded y.
+check("Table survives repeated clear/refill (live-refresh pattern)", function ()
+    local Table = require("mimic.Table")
+    local t = Table{parent=sandbox,x=130,y=25,width=20,height=6,max_rows=20,
+                    columns={ { name="N", width=8 } }}
+    local ok, err = pcall(function ()
+        for cycle = 1, 30 do
+            for r = 1, 20 do t.add_row{ tostring(r) } end
+            t.clear()
+        end
+        -- and it still works afterward
+        t.add_row{ "final" }
+    end)
+    assert(ok, "clear/refill crashed: " .. tostring(err))
+    assert(t.row_count() == 1, "table should hold the final row, got " .. t.row_count())
+end)
+
 check("Table rejects a bad cell reference", function ()
     local Table = require("mimic.Table")
     local t = Table{parent=sandbox,x=125,y=42,width=30,height=4,columns={ { name="A", width=8 } }}

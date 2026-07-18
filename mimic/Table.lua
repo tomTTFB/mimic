@@ -108,7 +108,12 @@ return function (args)
                   "Pass max_rows= to raise the ceiling, or clear() old rows.", 0)
         end
         values = values or {}
-        local line = Div{parent=body,width=total_w,height=1}
+        -- Give the row an explicit y (its 1-based index) rather than letting the
+        -- engine auto-place it. The auto-y counter only ever grows - it is not reset
+        -- when rows are deleted - so a table that clear()s and refills every tick
+        -- would eventually place a row past the scroll frame and crash. The index is
+        -- bounded by max_rows and resets to 1 after clear(). ListBox re-flows anyway.
+        local line = Div{parent=body,y=#rows + 1,width=total_w,height=1}
         local cells = {}
         for i = 1, #args.columns do
             local c = args.columns[i]
