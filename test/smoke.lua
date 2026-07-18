@@ -685,6 +685,52 @@ check("LEDList rejects an empty list clearly", function ()
     assert(tostring(err):find("empty"), "unhelpful: " .. tostring(err))
 end)
 
+-- Paginator
+
+check("Paginator pages items and renders each once", function ()
+    local Paginator = require("mimic.Paginator")
+    local DisplayBox = require("graphics.elements.DisplayBox")
+    local w = DisplayBox{window=window.create(term.current(),1,1,100,20,false),fg_bg=style.root}
+    local items, seen = {}, {}
+    for i = 1, 14 do items[i] = i end
+    local pg = Paginator{parent=w, x=1, y=1, width=100, height=20, items=items, per_page=6, cols=3,
+        render=function (_, item, index) seen[index] = item end}
+    assert(pg.page_count == 3, "14 items / 6 = 3 pages, got " .. pg.page_count)
+    assert(#seen == 14 and seen[14] == 14, "every item should render exactly once")
+end)
+
+check("Paginator navigation clamps at both ends", function ()
+    local Paginator = require("mimic.Paginator")
+    local DisplayBox = require("graphics.elements.DisplayBox")
+    local w = DisplayBox{window=window.create(term.current(),1,1,60,14,false),fg_bg=style.root}
+    local items = {} for i = 1, 10 do items[i] = i end
+    local pg = Paginator{parent=w, x=1, y=1, width=60, height=14, items=items, per_page=4,
+        render=function () end}
+    assert(pg.current() == 1, "starts on page 1")
+    pg.prev(); assert(pg.current() == 1, "prev on page 1 stays at 1")
+    pg.next(); pg.next(); pg.next(); pg.next()  -- 3 pages, over-shoot
+    assert(pg.current() == pg.page_count, "next past end clamps to last page")
+    pg.page(99); assert(pg.current() == pg.page_count, "page(99) clamps")
+    pg.page(-5); assert(pg.current() == 1, "page(-5) clamps to 1")
+end)
+
+check("Paginator edge cases", function ()
+    local Paginator = require("mimic.Paginator")
+    local DisplayBox = require("graphics.elements.DisplayBox")
+    local w = DisplayBox{window=window.create(term.current(),1,1,60,20,false),fg_bg=style.root}
+    -- fewer items than a page -> 1 page
+    local pg = Paginator{parent=w, x=1, y=1, width=40, height=8, items={1,2}, per_page=6, render=function () end}
+    assert(pg.page_count == 1, "2 items / 6 per page = 1 page")
+    -- empty items -> still 1 (empty) page, no crash
+    local pg2 = Paginator{parent=w, x=1, y=10, width=40, height=8, items={}, per_page=4, render=function () end}
+    assert(pg2.page_count == 1, "empty items = 1 page")
+    -- bad args error clearly
+    assert(not pcall(function () Paginator{parent=w, height=6, items={}, per_page=0, render=function () end} end),
+           "per_page=0 should error")
+    assert(not pcall(function () Paginator{parent=w, height=6, items={}, per_page=4, cols=9, render=function () end} end),
+           "cols > per_page should error")
+end)
+
 -- configurable themes
 
 check("theme selectable by name", function ()

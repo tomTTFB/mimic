@@ -34,6 +34,7 @@ mimic.Row        = require("mimic.Row")
 mimic.Grid       = require("mimic.Grid")
 mimic.Table      = require("mimic.Table")
 mimic.Dialog     = require("mimic.Dialog")
+mimic.Paginator  = require("mimic.Paginator")
 -- via the elements table, so it picks up bind=/ps= handling like the vendored elements
 mimic.Trend      = elements.Trend
 mimic.cpair      = core.cpair

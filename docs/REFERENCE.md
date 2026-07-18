@@ -96,6 +96,24 @@ A column of labelled indicator lights from a table, which is the dominant.
 | `width` | `integer` |  | defaults to the parent's width |
 | `fg_bg` | `cpair` |  |  |
 
+### Paginator
+
+Pages through a list of items, N per page, with prev/next nav.
+
+| field | type | required | description |
+|---|---|---|---|
+| `items` | `table[]` | yes | the data items to page through |
+| `render` | `function` | yes | render(slot, item, index) - fill a slot Div for one item |
+| `per_page` | `integer` | yes | slots per page |
+| `cols` | `integer` |  | grid columns per page, defaults to 1 (a vertical stack) |
+| `gap_x` | `integer` |  | column gap, defaults to 1 |
+| `gap_y` | `integer` |  | row gap, defaults to 0 |
+| `nav` | `boolean` |  | draw the prev / indicator / next row, true by default |
+| `accent` | `color` |  | nav accent color, defaults to gray |
+| `ps` | `psil` |  | data source for the pages |
+| `width` | `integer` |  | defaults to the parent's width |
+| `height` | `integer` | yes | total height, nav row included |
+
 ### Panel
 
 A titled, bordered box.

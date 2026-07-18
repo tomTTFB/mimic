@@ -67,6 +67,7 @@ panel_tabs         -- a tabbed front panel; fits a bare 51x19 computer screen
 dashboard          -- full dashboard: panels, gauges, trends, bar chart, alarms
 facility           -- front panel on the computer + dashboard on a monitor, one program
 themes             -- switch built-in + custom themes, and persist the choice
+paginated          -- page through more nodes than fit on one screen, with live data
 ```
 
 `dashboard` and `facility` need a monitor at least 100 wide (an 8×4 advanced monitor at 0.5
@@ -179,6 +180,15 @@ row-major, also callable as `cells(col, row)`.
 Columns with a header and a scrolling body. `columns` (each `name`, `width`, optional `align`).
 Returns a table with `add_row{...}` → row index, `set_cell(row, col, text)`, `set_row`, `clear`,
 `row_count`.
+
+### `mimic.Paginator{...}`
+
+Pages through a list of items, N per page, with prev/next nav — for when there are more things
+(chambers, nodes) than fit on one screen. Give it `items`, `per_page`, an optional `cols` grid,
+and a `render(slot, item, index)` callback that fills each slot. All pages are built up front and
+nav switches between them (no per-flip rebuild); bound elements work on hidden pages. Returns a
+table with `page(n)`, `next()`, `prev()`, `current()`, `page_count`. Distinct from `Tabs` (a fixed
+named set) and `Table`/`ListBox` (vertical scroll of one long list).
 
 ### `mimic.Dialog{...}`
 

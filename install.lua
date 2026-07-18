@@ -87,6 +87,7 @@ local FILES = {
     "mimic/Grid.lua",
     "mimic/Table.lua",
     "mimic/Dialog.lua",
+    "mimic/Paginator.lua",
 
     "examples/hello.lua",
     "examples/front_panel.lua",
@@ -95,6 +96,7 @@ local FILES = {
     "examples/dashboard.lua",
     "examples/facility.lua",
     "examples/themes.lua",
+    "examples/paginated.lua",
 }
 
 local function fail(msg)
