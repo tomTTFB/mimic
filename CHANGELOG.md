@@ -15,7 +15,8 @@ The library is feature-complete and hardware-tested. Working toward a tagged `v0
 - **Data binding**: `bind=` / `transform=` with an inherited `ps=` data source, replacing
   hand-written `register()` calls. `require("mimic.elements")` is the front door to every
   element, resolved lazily.
-- **Helpers**: `LEDList`, `Panel`, `Tabs`, `Gauge`, `Row`, `Grid`, `Table`, `Dialog`.
+- **Helpers**: `LEDList`, `Panel`, `Tabs`, `Gauge`, `Row`, `Grid`, `Table`, `Dialog`,
+  `Paginator` (page through more items than fit on one screen).
 - **Charts**: `Trend` (filled `area` and `line` styles, 3× subpixel vertical resolution) and
   `BarChart` — neither has an equivalent in the underlying engine.
 - **Configurable themes**: two built-ins (`deepslate`, `smooth_stone`), `register_theme` /

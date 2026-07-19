@@ -320,7 +320,7 @@ Priorities come from actually building screens, not from guessing.
 
 - **Done:** `bind=` / `ps=` inheritance, the `mimic.elements` front door, `LEDList`, `Panel`,
   `Tabs`, `Gauge`, `Trend` (area + line), `BarChart`, `Row`, `Grid`, `Table`, `Dialog`,
-  multi-display support
+  `Paginator`, configurable themes, multi-display support
 - **A configurator** (interactive settings screen) is intentionally *not* a core feature —
   it is app-specific and built with mimic's own elements (TextField, RadioButton, Tabs,
   buttons) plus `save_prefs`/`load_prefs`. cc-mek-scada's `configure.lua` is exactly this:

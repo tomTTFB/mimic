@@ -37,7 +37,7 @@ removed) — do not add to that list without a very good reason.
 - `mimic/elements.lua` — the front door. Wraps every vendored element so it takes
   `bind=` / `transform=` / `ps=`, and resolves them lazily by name. `require("mimic.elements")`.
 - Helpers, each its own file: `LEDList`, `Panel`, `Tabs`, `Gauge`, `Trend`,
-  `BarChart`, `Row`, `Grid`, `Table`, `Dialog`.
+  `BarChart`, `Row`, `Grid`, `Table`, `Dialog`, `Paginator`.
 
 ### Data binding
 
