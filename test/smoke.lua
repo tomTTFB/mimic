@@ -494,6 +494,16 @@ check("add_display creates a second root", function ()
     assert(#mimic.displays() >= 2, "expected at least 2 displays, got " .. #mimic.displays())
 end)
 
+-- regression: binding one screen twice used to silently create a broken 2nd
+-- display (fights over the output, never gets touches). Now it errors.
+check("binding the terminal twice errors, adds no display", function ()
+    local before = #mimic.displays()
+    local ok, err = pcall(function () mimic.init() end)
+    assert(not ok, "a second terminal init should error")
+    assert(tostring(err):find("already has a display"), "unhelpful: " .. tostring(err))
+    assert(#mimic.displays() == before, "the failed init must not add a display")
+end)
+
 check("add_display without a monitor errors", function ()
     local ok, err = pcall(function () mimic.add_display{} end)
     assert(not ok, "expected an error")

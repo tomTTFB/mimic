@@ -212,8 +212,56 @@ d.show()
 everything inside picks it up, so you rarely repeat it. `colors._INHERIT` inherits one channel
 while setting the other.
 
-### Gotchas
+### Peripheral I/O and the event loop — read this before a real facility
 
+**`mimic.run()` is a single cooperative loop.** It handles clicks, the clock, and blinking on
+one thread. If you do slow work inside a callback or a `tcd` timer — especially **peripheral
+calls**, which each *yield* until the server answers — the whole UI freezes for the duration.
+Reading 24 inventories every 2 seconds inside the loop will make the interface feel broken.
+
+Do the I/O in a **parallel coroutine** instead, and let it publish to a `psil`. The UI stays
+responsive because each peripheral call's yield lets `mimic.run` interleave:
+
+```lua
+parallel.waitForAny(
+    mimic.run,                       -- owns input, clock, blinking
+    function ()                      -- your slow polling, off the event loop
+        while true do
+            for i = 1, #chambers do
+                local ok, data = pcall(read_chamber, i)   -- always pcall peripherals
+                if ok then ps.publish("chamber" .. i, data) end
+            end
+            os.sleep(2)
+        end
+    end)
+```
+
+Always wrap peripheral calls in `pcall` — a detached monitor or unplugged inventory should not
+take the whole panel down.
+
+### Values and getters
+
+- **`NumberField:get_value()` returns a string**, not a number (it stores the typed text). Use
+  `tonumber(field.get_value())`.
+- **A `Checkbox`'s state is `get_value()`** (a boolean), not `get_state()`. It updates on every
+  click, so you can read it directly rather than tracking it via the callback.
+
+### Buttons, overlays, and draw order
+
+- **There is no z-buffer.** Elements draw to the shared screen in **creation order** — build
+  overlays (a `Dialog`) *last* so they land on top.
+- **Nothing underneath an overlay should redraw while it's open.** A periodic refresh that
+  touches elements behind a `Dialog` will paint through it. Guard your refresh:
+  `if not dialog.is_open() then refresh() end`.
+- **`PushButton{active_fg_bg=...}` repaints itself ~0.25s after a press** (the "unpress"). If an
+  overlay is opened by that button, the delayed repaint can bleed through — another reason to
+  gate redraws while a dialog is up.
+
+### Other
+
+- **One screen, one display.** `mimic.init()` binds the terminal; `add_display{monitor=...}`
+  binds a monitor. Binding the same screen twice **errors** (it used to silently create a
+  broken second display).
 - `Rectangle{thin=true}` means a *thin border*, not a thin box — it requires `border=` and
   errors without it. For a plain filled box, pass neither.
 - Elements auto-stack vertically inside a `Div` when you omit `y`; `line_break()` adds a gap.
@@ -221,6 +269,8 @@ while setting the other.
 - Minecraft fires `monitor_resize` routinely — on chunk load, on attach — usually with no
   real size change. mimic checks the size and ignores the no-ops, so it is never fatal.
   Pass `on_resize` if your UI needs to rebuild for a genuinely new size.
+
+Every element's full argument list is in **[docs/REFERENCE.md](docs/REFERENCE.md)**.
 
 ### Theming
 

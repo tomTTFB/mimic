@@ -94,6 +94,17 @@ Anything peripheral- or timing-related must be checked in-game too.
   denylist and errors at build. Add to it if you vendor a new pure container.
 - **`monitor_resize` is routine in Minecraft** (chunk load, attach) and usually not a
   real size change. Never treat it as fatal. mimic checks the size and ignores no-ops.
+- **`mimic.run` is one cooperative loop.** Heavy peripheral I/O (each call yields) must run
+  in a `parallel` coroutine, not inside a callback/`tcd` timer, or the UI freezes. This is the
+  single biggest real-world footgun — it is documented in the README "Peripheral I/O" section.
+- **No z-buffer; draw order = creation order.** Overlays (Dialog) must be built last, and
+  nothing beneath them may redraw while they are open. `PushButton{active_fg_bg}` also does a
+  ~0.25s delayed "unpress" repaint that can bleed through overlays.
+- **Vendored getter quirks worth knowing:** `NumberField:get_value()` returns a *string*;
+  a `Checkbox`'s state is `get_value()` (boolean), not `get_state()`. Can't fix vendored
+  code — these live in the README behavior notes so users don't hit them blind.
+- **One screen = one display.** `init`/`add_display` now error on a double-bind instead of
+  silently creating a broken second display.
 
 ## Conventions
 

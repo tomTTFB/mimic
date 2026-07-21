@@ -114,10 +114,10 @@ local function display_for_monitor(name)
     end
 end
 
--- the display on the computer's own screen (the one with no monitor)
+-- the display on the computer's own screen (not a monitor, not an offscreen window)
 local function terminal_display()
     for i = 1, #self.displays do
-        if self.displays[i].monitor == nil then return self.displays[i] end
+        if self.displays[i].is_terminal then return self.displays[i] end
     end
 end
 
@@ -169,6 +169,21 @@ function mimic.init(opts)
     local theme_id = opts.theme or (saved and saved.theme) or mimic.THEME.DEEPSLATE
     local color_mode = opts.color_mode or (saved and saved.color_mode) or mimic.COLOR_MODE.STANDARD
 
+    -- one screen, one display. Binding a monitor (or the terminal) twice otherwise
+    -- silently creates a second display that fights over the same output and never
+    -- receives touches - a silent-wrong-display trap. Fail loudly instead.
+    if opts.monitor then
+        if display_for_monitor(opts.monitor) then
+            error(util.c("mimic: monitor '", opts.monitor, "' already has a display. ",
+                  "Each monitor is bound once; use add_display for a different monitor."), 0)
+        end
+    elseif opts.window == nil then
+        if terminal_display() then
+            error("mimic: the terminal already has a display. mimic.init() binds the " ..
+                  "computer's own screen once; use add_display{monitor=...} for a monitor.", 0)
+        end
+    end
+
     -- resolve the draw target
     local target
     if opts.window then
@@ -206,6 +221,9 @@ function mimic.init(opts)
         target = target,
         palette = style.theme,
         monitor = opts.monitor,
+        -- the real computer terminal (not a monitor, not an offscreen window);
+        -- keyboard/terminal-mouse events route here
+        is_terminal = (opts.monitor == nil and opts.window == nil),
         -- remembered so a monitor_resize can be checked rather than assumed
         width = dw,
         height = dh,
