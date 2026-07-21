@@ -10,6 +10,10 @@ by Mikayla Fischler, used under the MIT license. See [THIRD_PARTY_NOTICES.md](TH
 > top is new, but it runs: `test/run.sh` runs a smoke test inside CraftOS-PC and
 > passes, and every example runs on real in-game hardware. The API may still change.
 
+**[Why not Basalt?](#why-not-basalt)** · **[Installation](#installation)** ·
+**[Hello world](#hello-world)** · **[API](#api)** · **[Elements](#elements)** ·
+**[Testing](#testing)** · **[Roadmap](#roadmap)**
+
 ## Why not [Basalt](https://basalt.madefor.cc/)?
 
 Basalt is a general-purpose UI framework for CC:Tweaked — windows, buttons, text fields, any
@@ -18,6 +22,31 @@ kind of app. Use it for general UI; it's good.
 mimic does one narrower job: **dashboards that monitor things.** It ships the control-room look
 by default, and its vocabulary is indicator lights, alarm strips, state tags, bar gauges and
 trends rather than windows and menus. Different job.
+
+## Installation
+
+On an in-game computer or turtle with an internet card:
+
+```
+wget run https://raw.githubusercontent.com/TomTTFB/mimic/main/install.lua
+```
+
+This downloads the whole library — `mimic/`, the vendored `graphics/` and `scada-common/`
+engine, and `initenv.lua` — onto the computer. Requires the repo to stay public (raw.
+githubusercontent.com 404s on a private repo) and an HTTP allowlist that permits
+`raw.githubusercontent.com` (the CC:Tweaked default already does).
+
+Hosting it yourself instead (e.g. for a local dev server)? Pass a base URL:
+
+```
+wget run http://192.168.1.10:8000/install.lua http://192.168.1.10:8000
+```
+
+CC:Tweaked blocks private/loopback addresses by default; see the comment at the top of
+`install.lua` for the `computercraft-server.toml` rule that allows them.
+
+Once installed, grab an [example](#examples) to see it running, or jump to
+[Hello world](#hello-world) below.
 
 ## Hello world
 
@@ -133,6 +162,17 @@ A titled, bordered box — the signature dashboard look. Takes `title`, `accent`
 `align`, plus the usual geometry. Returns the **content area**, so children parent straight
 to it and its `get_width()`/`get_height()` report the room you can actually use (the border
 and title are already subtracted).
+
+### `mimic.Tabs{...}`
+
+A tab bar over a stack of pages — one call instead of hand-syncing a `Div` per page, a
+`MultiPane`, and a `TabBar` callback. Takes `tabs` (each `{name=, color=}`), plus `min_width`
+and a `callback(index)` for when the tab changes. Returns the pages as `Div`s to build into.
+
+```lua
+local pages = mimic.Tabs{parent=panel,y=2,tabs={{name="SVR"},{name="PLC"}}}
+-- build into pages[1] and pages[2]
+```
 
 ### `mimic.Gauge{...}`
 
