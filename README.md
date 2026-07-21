@@ -10,6 +10,18 @@ by Mikayla Fischler, used under the MIT license. See [THIRD_PARTY_NOTICES.md](TH
 > top is new, but it runs: `test/run.sh` runs a smoke test inside CraftOS-PC and
 > passes, and every example runs on real in-game hardware. The API may still change.
 
+## 📖 Full documentation
+
+The complete guide lives in **[docs/](docs/index.md)**:
+
+- **[Getting started](docs/getting-started.md)** · **[Concepts](docs/concepts.md)** ·
+  **[Data binding](docs/data-binding.md)**
+- **[Layout](docs/layout.md)** · **[Charts](docs/charts.md)** · **[Theming](docs/theming.md)**
+- **[Performance](docs/performance.md)** (read before a real facility) ·
+  **[Behavior & gotchas](docs/behavior.md)** · **[Element reference](docs/REFERENCE.md)**
+
+The rest of this README is a quick overview.
+
 ## Why not [Basalt](https://basalt.madefor.cc/)?
 
 Basalt is a general-purpose UI framework for CC:Tweaked — windows, buttons, text fields, any
